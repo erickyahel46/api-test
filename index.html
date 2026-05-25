@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API Tester</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: #f0f2f5;
+    color: #1a1a1a;
+    min-height: 100vh;
+    padding: 24px 16px;
+  }
+
+  .container { max-width: 860px; margin: 0 auto; }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #111;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  h1 i { color: #5b5fcf; font-size: 26px; }
+
+  .badge-proxy {
+    font-size: 11px;
+    font-weight: 700;
+    background: #e6f9f0;
+    color: #1a7a4a;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-left: 4px;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid #e2e4e9;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+  }
+
+  .card-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: #888;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .url-row { display: flex; gap: 8px; align-items: center; }
+
+  select, input[type="text"], input[type="password"], textarea {
+    font-family: inherit;
+    font-size: 14px;
+    color: #1a1a1a;
+    background: #fff;
+    border: 1.5px solid #d0d3db;
+    border-radius: 8px;
+    padding: 0 12px;
+    height: 40px;
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+
+  select:focus, input:focus, textarea:focus {
+    border-color: #5b5fcf;
+    box-shadow: 0 0 0 3px rgba(91,95,207,.12);
+  }
+
+  .method-select { width: 115px; flex-shrink: 0; font-weight: 600; cursor: pointer; background: #f7f8fc; }
+  .url-input { flex: 1; font-size: 15px; }
+
+  .send-btn {
+    height: 40px;
+    padding: 0 22px;
+    border-radius: 8px;
+    border: none;
+    background: #5b5fcf;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    white-space: nowrap;
+    transition: background .15s, transform .1s;
+    flex-shrink: 0;
+  }
+
+  .send-btn:hover { background: #4a4eb8; }
+  .send-btn:active { transform: scale(.97); }
+  .send-btn.loading { opacity: .65; pointer-events: none; }
+
+  .auth-row { display: grid; grid-template-columns: 200px 1fr; gap: 10px; align-items: start; }
+  .auth-fields { display: flex; flex-direction: column; gap: 8px; }
+  .auth-fields input { width: 100%; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  .header-row { display: grid; grid-template-columns: 1fr 1fr 36px; gap: 8px; margin-bottom: 8px; align-items: center; }
+  .header-row input { height: 36px; }
+
+  .add-btn {
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 8px;
+    border: 1.5px dashed #c0c4d0;
+    background: transparent;
+    color: #777;
+    font-size: 13px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all .15s;
+    margin-top: 4px;
+  }
+
+  .add-btn:hover { border-color: #5b5fcf; color: #5b5fcf; background: #f0f1fd; }
+
+  .remove-btn {
+    width: 36px; height: 36px;
+    border: 1.5px solid #e2e4e9;
+    border-radius: 8px;
+    background: #fff;
+    color: #aaa;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    transition: all .15s;
+    flex-shrink: 0;
+  }
+
+  .remove-btn:hover { border-color: #f09595; background: #fff5f5; color: #c0392b; }
+
+  textarea {
+    width: 100%; height: 160px; padding: 12px; resize: vertical;
+    font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.6;
+  }
+
+  .resp-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 13px; font-weight: 700;
+    padding: 4px 12px; border-radius: 20px;
+  }
+
+  .s2xx { background: #e6f9f0; color: #1a7a4a; }
+  .s3xx { background: #e6f0fb; color: #1a5fa5; }
+  .s4xx { background: #fdf3e6; color: #a05a00; }
+  .s5xx { background: #fdeaea; color: #a32d2d; }
+
+  .elapsed { font-size: 13px; color: #888; }
+
+  .tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+
+  .tab-btn {
+    height: 30px; padding: 0 14px;
+    border-radius: 20px; border: 1.5px solid #d0d3db;
+    background: #fff; font-size: 13px; cursor: pointer;
+    color: #777; font-weight: 500; transition: all .15s;
+  }
+
+  .tab-btn.active { border-color: #5b5fcf; color: #5b5fcf; background: #f0f1fd; }
+
+  .resp-box {
+    background: #f7f8fc; border: 1.5px solid #e2e4e9;
+    border-radius: 10px; padding: 14px; position: relative;
+  }
+
+  .resp-pre {
+    font-family: 'Courier New', monospace; font-size: 13px;
+    line-height: 1.65; white-space: pre-wrap; word-break: break-all;
+    max-height: 400px; overflow-y: auto; color: #1a1a1a;
+  }
+
+  .copy-btn {
+    position: absolute; top: 10px; right: 10px;
+    height: 28px; padding: 0 10px;
+    border-radius: 7px; border: 1.5px solid #d0d3db;
+    background: #fff; color: #666; font-size: 12px; cursor: pointer;
+    display: flex; align-items: center; gap: 5px; transition: all .15s;
+  }
+
+  .copy-btn:hover { border-color: #5b5fcf; color: #5b5fcf; }
+
+  .empty-resp { color: #aaa; font-size: 14px; font-style: italic; text-align: center; padding: 24px 0; }
+  .error-text { color: #c0392b; }
+
+  label { font-size: 13px; font-weight: 600; color: #444; display: block; margin-bottom: 5px; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinning { animation: spin .8s linear infinite; display: inline-block; }
+
+  @media (max-width: 600px) {
+    .url-row { flex-wrap: wrap; }
+    .url-input { min-width: 0; }
+    .auth-row { grid-template-columns: 1fr; }
+    .two-col { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>
+    <i class="ti ti-api"></i> API Tester
+    <span class="badge-proxy"><i class="ti ti-shield-check" style="font-size:11px;vertical-align:-1px"></i> Sin CORS</span>
+  </h1>
+
+  <div class="card">
+    <div class="card-title"><i class="ti ti-world"></i> Petición</div>
+    <div class="url-row">
+      <select class="method-select" id="method">
+        <option>GET</option>
+        <option>POST</option>
+        <option>PUT</option>
+        <option>PATCH</option>
+        <option>DELETE</option>
+        <option>HEAD</option>
+        <option>OPTIONS</option>
+      </select>
+      <input class="url-input" id="url" type="text" placeholder="https://api.ejemplo.com/ruta" />
+      <button class="send-btn" id="send-btn" onclick="sendRequest()">
+        <i class="ti ti-send"></i> Enviar
+      </button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="ti ti-lock"></i> Autorización</div>
+    <div class="auth-row">
+      <div>
+        <label>Tipo de auth</label>
+        <select id="auth-type" style="width:100%" onchange="toggleAuth()">
+          <option value="none">Sin autenticación</option>
+          <option value="bearer">Bearer Token</option>
+          <option value="basic">Basic Auth</option>
+          <option value="apikey">API Key (header)</option>
+          <option value="custom">Header personalizado</option>
+        </select>
+      </div>
+      <div class="auth-fields" id="auth-fields">
+        <p style="color:#aaa;font-size:13px;padding-top:8px">Selecciona un tipo de autenticación.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="ti ti-list"></i> Headers adicionales</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 36px;gap:8px;margin-bottom:6px">
+      <span style="font-size:12px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.05em">Key</span>
+      <span style="font-size:12px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.05em">Value</span>
+      <span></span>
+    </div>
+    <div id="headers-container"></div>
+    <button class="add-btn" onclick="addHeader()"><i class="ti ti-plus"></i> Agregar header</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="ti ti-code"></i> Body (JSON)</div>
+    <textarea id="body" placeholder='{"key": "value", "otro": 123}'></textarea>
+  </div>
+
+  <div class="card" id="response-card">
+    <div class="card-title"><i class="ti ti-arrow-back-up"></i> Respuesta</div>
+    <div id="response-area">
+      <div class="empty-resp">Presiona <strong>Enviar</strong> para ver la respuesta aquí.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+let extraHeaders = [];
+
+function toggleAuth() {
+  const t = document.getElementById('auth-type').value;
+  const f = document.getElementById('auth-fields');
+  const inp = (id, ph, type='text') =>
+    `<input id="${id}" type="${type}" placeholder="${ph}" style="width:100%;height:40px;padding:0 12px;font-family:inherit;font-size:14px;color:#1a1a1a;background:#fff;border:1.5px solid #d0d3db;border-radius:8px;outline:none" />`;
+
+  if (t === 'none') {
+    f.innerHTML = '<p style="color:#aaa;font-size:13px;padding-top:8px">Selecciona un tipo de autenticación.</p>';
+  } else if (t === 'bearer') {
+    f.innerHTML = `<label>Token</label>${inp('auth-val', "Pega tu Bearer token aquí (sin escribir 'Bearer')")}`;
+  } else if (t === 'basic') {
+    f.innerHTML = `<label>Credenciales</label><div class="two-col">${inp('auth-user','Usuario')}${inp('auth-pass','Contraseña','password')}</div>`;
+  } else if (t === 'apikey') {
+    f.innerHTML = `<label>Header de API Key</label><div class="two-col">${inp('auth-key','Nombre del header (ej. X-API-Key)')}${inp('auth-val','Tu API key')}</div>`;
+  } else if (t === 'custom') {
+    f.innerHTML = `<label>Header personalizado</label><div class="two-col">${inp('auth-key','Key (ej. Authorization)')}${inp('auth-val','Value (ej. Token abc123)')}</div>`;
+  }
+}
+
+function addHeader(k='', v='') {
+  const id = Date.now();
+  extraHeaders.push(id);
+  const c = document.getElementById('headers-container');
+  const d = document.createElement('div');
+  d.className = 'header-row';
+  d.id = 'hr-' + id;
+  const style = `style="width:100%;height:36px;padding:0 10px;font-family:inherit;font-size:13px;color:#1a1a1a;background:#fff;border:1.5px solid #d0d3db;border-radius:8px;outline:none"`;
+  d.innerHTML = `<input placeholder="Key" value="${k}" ${style} data-hkey="${id}" /><input placeholder="Value" value="${v}" ${style} data-hval="${id}" /><button class="remove-btn" onclick="removeHeader(${id})"><i class="ti ti-x"></i></button>`;
+  c.appendChild(d);
+}
+
+function removeHeader(id) {
+  extraHeaders = extraHeaders.filter(x => x !== id);
+  document.getElementById('hr-' + id)?.remove();
+}
+
+function getAuthHeaders() {
+  const t = document.getElementById('auth-type').value;
+  const h = {};
+  if (t === 'bearer') {
+    const v = document.getElementById('auth-val')?.value?.trim();
+    if (v) h['Authorization'] = 'Bearer ' + v;
+  } else if (t === 'basic') {
+    const u = document.getElementById('auth-user')?.value || '';
+    const p = document.getElementById('auth-pass')?.value || '';
+    if (u || p) h['Authorization'] = 'Basic ' + btoa(u + ':' + p);
+  } else if (t === 'apikey') {
+    const k = document.getElementById('auth-key')?.value?.trim();
+    const v = document.getElementById('auth-val')?.value?.trim();
+    if (k && v) h[k] = v;
+  } else if (t === 'custom') {
+    const k = document.getElementById('auth-key')?.value?.trim();
+    const v = document.getElementById('auth-val')?.value?.trim();
+    if (k && v) h[k] = v;
+  }
+  return h;
+}
+
+function getExtraHeaders() {
+  const h = {};
+  extraHeaders.forEach(id => {
+    const k = document.querySelector(`[data-hkey="${id}"]`)?.value?.trim();
+    const v = document.querySelector(`[data-hval="${id}"]`)?.value?.trim();
+    if (k && v) h[k] = v;
+  });
+  return h;
+}
+
+async function sendRequest() {
+  const url = document.getElementById('url').value.trim();
+  const method = document.getElementById('method').value;
+  const bodyText = document.getElementById('body').value.trim();
+  const btn = document.getElementById('send-btn');
+
+  if (!url) { showError('⚠️ Escribe una URL antes de enviar.'); return; }
+
+  if (bodyText && !['GET','HEAD'].includes(method)) {
+    try { JSON.parse(bodyText); }
+    catch(e) { showError('El body no es JSON válido:\n' + e.message); return; }
+  }
+
+  btn.classList.add('loading');
+  btn.innerHTML = '<i class="ti ti-loader-2 spinning"></i> Enviando...';
+
+  const headers = { ...getAuthHeaders(), ...getExtraHeaders() };
+
+  const payload = { url, method, headers };
+  if (bodyText && !['GET','HEAD'].includes(method)) payload.body = bodyText;
+
+  try {
+    const res = await fetch('/proxy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if (data.error) {
+      showError(data.error);
+    } else {
+      let prettyBody = data.body;
+      try { prettyBody = JSON.stringify(JSON.parse(data.body), null, 2); } catch(e) {}
+      const headersArr = Object.entries(data.headers || {});
+      showResponse(data.status, data.statusText, data.elapsed, prettyBody, headersArr);
+    }
+  } catch(e) {
+    showError('No se pudo conectar con el proxy local.\n¿Está corriendo server.js?');
+  }
+
+  btn.classList.remove('loading');
+  btn.innerHTML = '<i class="ti ti-send"></i> Enviar';
+}
+
+function statusClass(s) {
+  if (s < 300) return 's2xx';
+  if (s < 400) return 's3xx';
+  if (s < 500) return 's4xx';
+  return 's5xx';
+}
+
+function showResponse(status, statusText, elapsed, body, respHeaders) {
+  const area = document.getElementById('response-area');
+  const headersText = respHeaders.map(([k,v]) => `${k}: ${v}`).join('\n');
+  window._respBody = body;
+  window._respHeaders = headersText;
+
+  area.innerHTML = `
+    <div class="resp-meta">
+      <span class="status-pill ${statusClass(status)}">${status} ${statusText}</span>
+      <span class="elapsed"><i class="ti ti-clock" style="font-size:14px;vertical-align:-2px"></i> ${elapsed} ms</span>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" id="tab-body" onclick="showTab('body')">Body</button>
+      <button class="tab-btn" id="tab-headers" onclick="showTab('headers')">Headers (${respHeaders.length})</button>
+    </div>
+    <div class="resp-box" id="pane-body">
+      <button class="copy-btn" onclick="copyContent('body')"><i class="ti ti-copy"></i> Copiar</button>
+      <pre class="resp-pre">${escHtml(body || '(sin contenido)')}</pre>
+    </div>
+    <div class="resp-box" id="pane-headers" style="display:none">
+      <button class="copy-btn" onclick="copyContent('headers')"><i class="ti ti-copy"></i> Copiar</button>
+      <pre class="resp-pre">${escHtml(headersText)}</pre>
+    </div>`;
+
+  document.getElementById('response-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function showTab(t) {
+  document.getElementById('pane-body').style.display = t === 'body' ? 'block' : 'none';
+  document.getElementById('pane-headers').style.display = t === 'headers' ? 'block' : 'none';
+  document.getElementById('tab-body').classList.toggle('active', t === 'body');
+  document.getElementById('tab-headers').classList.toggle('active', t === 'headers');
+}
+
+function copyContent(which) {
+  const text = which === 'body' ? window._respBody : window._respHeaders;
+  navigator.clipboard.writeText(text || '').then(() => {
+    document.querySelectorAll('.copy-btn').forEach(b => {
+      if (b.closest('#pane-' + which)) {
+        b.innerHTML = '<i class="ti ti-check"></i> Copiado';
+        setTimeout(() => b.innerHTML = '<i class="ti ti-copy"></i> Copiar', 2000);
+      }
+    });
+  });
+}
+
+function showError(msg) {
+  document.getElementById('response-area').innerHTML = `
+    <div class="resp-box">
+      <pre class="resp-pre error-text">${escHtml(msg)}</pre>
+    </div>`;
+}
+
+function escHtml(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+toggleAuth();
+</script>
+</body>
+</html>
